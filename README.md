@@ -11,6 +11,8 @@ App web para acompanhar **treinos, peso, medidas e fotos de progresso**. Funcion
 - **Evolução:** gráficos de peso (com a linha da meta), medidas, treinos por semana e carga por exercício.
 - **Backup:** exportar e importar tudo em um arquivo JSON, com ou sem fotos.
 
+Para trazer os dados da versão publicada no Claude, exporte o backup de lá e use **Ajustes, Importar** aqui. O arquivo antigo é aceito como está.
+
 O app não define calorias nem cardápio. Isso fica com um nutricionista.
 
 ## Privacidade

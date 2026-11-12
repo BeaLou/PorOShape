@@ -255,7 +255,10 @@ async function doImport(file){
   try{
     const d=JSON.parse(await file.text());if(d.app!=='por-o-shape')throw new Error('x');
     const jobs=[];
-    if(d.settings){S.settings=Object.assign({},DEFAULTS,d.settings,{setup:true});jobs.push(Store.put('settings','main',S.settings))}
+    if(d.settings){const st=Object.assign({},d.settings);
+    if(st.ankle!==undefined&&st.lowImpact===undefined)st.lowImpact=!!st.ankle; // backups da versão antiga
+    delete st.ankle;
+    S.settings=Object.assign({},DEFAULTS,st,{setup:true});jobs.push(Store.put('settings','main',S.settings))}
     ['days','sessions','body','photos'].forEach(c=>Object.keys(d[c]||{}).forEach(id=>{S[c][id]=d[c][id];jobs.push(Store.put(c,id,d[c][id]))}));
     await Promise.all(jobs);render(true);toast('Backup restaurado');
   }catch(e){toast('Esse arquivo não é um backup do app.')}
