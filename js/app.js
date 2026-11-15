@@ -1,12 +1,12 @@
 // Por o Shape: estado, telas e ações do app.
 import {$,iso,parse,today,esc,num,nf,fdate,addDays,mondayOf,clamp,cap,icon} from './util.js';
-import {DAYS,EXMAP,MEAS,HABITS,TIPS,DEFAULTS} from './plan.js';
+import {DAYS,EXMAP,MEAS,HABITS,TIPS,CARDIO,DEFAULTS} from './plan.js';
 import {lineChart,barChart} from './charts.js';
 import {Store} from './store.js';
 
 /* ---------- estado ---------- */
-const S={tab:'hoje',settings:Object.assign({},DEFAULTS),days:{},sessions:{},body:{},photos:{},
-  loaded:false,ui:{day:'A',date:today(),bodyDate:today(),pose:'Todas',addPose:'Frente',pDate:today(),cmpA:null,cmpB:null,meas:'cintura',exSel:null,confirm:null,modal:null,lightbox:null}};
+const S={tab:'hoje',settings:Object.assign({},DEFAULTS),days:{},sessions:{},body:{},photos:{},cardio:{},
+  loaded:false,ui:{day:'A',date:today(),bodyDate:today(),pose:'Todas',addPose:'Frente',pDate:today(),cmpA:null,cmpB:null,meas:'cintura',exSel:null,cType:'Bicicleta',cMin:20,cOther:'',confirm:null,modal:null,lightbox:null}};
 const resolveEx=e=>(S.settings.lowImpact&&e.alt)?Object.assign({},e,e.alt):e;
 function paintStatus(){$('#status').innerHTML='<span class="dot'+(Store.ok?'':' local')+'"></span><span>'+(Store.ok?'Dados salvos neste aparelho':'Não consegui salvar. Faça um backup')+'</span>'}
 function save(col,id,data){Store.put(col,id,data).catch(()=>toast('Não consegui salvar agora. Tente de novo.'))}
@@ -88,15 +88,26 @@ function vTreino(){
       +(e.note?'<div class="note">'+esc(e.note)+'</div>':'')+hint+'<div class="sets">'+sets+'</div>'
       +(e.t==='load'?'<button class="chip'+(r.top?' on':'')+'" style="align-self:flex-start" data-act="top" data-ex="'+e.id+'" aria-pressed="'+!!r.top+'">Fechei o topo das repetições</button>':'')+'</article>';
   }).join('');
-  const hist=Object.values(S.sessions).filter(x=>counted(x)||sessDone(x).done>0).sort((a,b)=>a.date<b.date?1:-1).slice(0,6).map(x=>{const dd=DAYS.find(q=>q.k===x.day),y=sessDone(x);
-    return '<button class="li" style="width:100%;background:none;border:0;border-bottom:1px solid var(--line);text-align:left" data-act="open-session" data-d="'+x.date+'" data-k="'+x.day+'"><span class="row"><span class="tag day" style="--dc:var('+dd.color+')">'+x.day+'</span><span>'+fdate(x.date,{weekday:'short',day:'2-digit',month:'2-digit'})+'</span></span><span class="muted">'+(x.min?'versão mínima':y.done+'/'+y.total+' séries')+'</span></button>'}).join('');
+  const hasData=x=>counted(x)||sessDone(x).done>0||Object.values(x.ex||{}).some(r=>r.kg!=null);
+  const hist=Object.keys(S.sessions).map(k=>Object.assign({id:k},S.sessions[k])).filter(hasData).sort((a,b)=>a.date===b.date?(a.day<b.day?1:-1):a.date<b.date?1:-1).slice(0,10).map(x=>{
+    const dd=DAYS.find(q=>q.k===x.day),y=sessDone(x),ask=u.confirm==='sessions'+x.id,inc=!counted(x);
+    return '<div class="li"><button style="flex:1;background:none;border:0;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:10px" data-act="open-session" data-d="'+x.date+'" data-k="'+x.day+'"><span class="row"><span class="tag day" style="--dc:var('+dd.color+')">'+x.day+'</span><span>'+fdate(x.date,{weekday:'short',day:'2-digit',month:'2-digit'})+'</span></span><span class="muted">'+(x.min?'versão mínima':y.done+'/'+y.total+' séries'+(inc?' · incompleto':''))+'</span></button>'
+      +'<button class="btn ghost sm" data-act="del" data-col="sessions" data-id="'+x.id+'" aria-label="Apagar treino">'+(ask?'Confirmar':icon('trash'))+'</button></div>'}).join('');
+  const cList=Object.keys(S.cardio).map(k=>Object.assign({id:k},S.cardio[k])).sort((a,b)=>a.date===b.date?b.ts-a.ts:a.date<b.date?1:-1).slice(0,8);
+  const cardio='<section class="card"><div class="row between"><h2>Cardio</h2><span class="small">em '+fdate(u.date)+'</span></div>'
+    +'<div class="row">'+CARDIO.map(c=>'<button class="chip'+(u.cType===c?' on':'')+'" data-act="ctype" data-v="'+c+'" aria-pressed="'+(u.cType===c)+'">'+c+'</button>').join('')+'</div>'
+    +(u.cType==='Outro'?'<label class="f">Qual cardio?<input id="c-other" data-field="cother" maxlength="40" value="'+esc(u.cOther)+'" placeholder="Ex.: dança, remo"></label>':'')
+    +'<div class="row between"><b>Tempo</b><div class="stepper"><button data-act="cmin-" aria-label="Menos 5 minutos">−</button><input id="c-min" inputmode="numeric" data-field="cmin" value="'+u.cMin+'" aria-label="Minutos de cardio"><span class="u">min</span><button data-act="cmin+" aria-label="Mais 5 minutos">+</button></div></div>'
+    +'<button class="btn full" data-act="save-cardio">Salvar cardio</button>'
+    +(cList.length?'<div class="list">'+cList.map(c=>{const ask=u.confirm==='cardio'+c.id;return '<div class="li"><span><b>'+fdate(c.date,{weekday:'short',day:'2-digit',month:'2-digit'})+'</b> '+esc(c.tipo)+' <span class="muted">· '+c.min+' min</span></span><button class="btn ghost sm" data-act="del" data-col="cardio" data-id="'+c.id+'" aria-label="Apagar cardio">'+(ask?'Confirmar':icon('trash'))+'</button></div>'}).join('')+'</div>':'')+'</section>';
   return '<div class="daypills">'+pills+'</div>'
   +'<section class="card"><div class="row between"><h2>Treino '+day.k+': '+esc(day.name)+'</h2><span class="small">'+dn.done+'/'+dn.total+' séries</span></div>'
   +'<div class="bar"><i style="width:'+(pct*100)+'%"></i></div>'
   +'<div class="row"><label class="f" style="flex:1">Data do treino<input type="date" id="tdate" data-field="tdate" value="'+u.date+'" max="'+today()+'"></label>'
   +'<button class="chip'+(s.min?' on':'')+'" style="align-self:flex-end" data-act="min" aria-pressed="'+!!s.min+'">Só a versão mínima</button></div>'
   +(S.settings.lowImpact?'<div class="note">Modo baixo impacto ligado: exercícios de impacto têm alternativa. Dá para desligar nos ajustes.</div>':'')
-  +'</section>'+cards
+  +(S.sessions[id]?'<button class="btn ghost sm" style="align-self:flex-start" data-act="del" data-col="sessions" data-id="'+id+'">'+(u.confirm==='sessions'+id?'Toque de novo para apagar':'Apagar este treino')+'</button>':'')
+  +'</section>'+cards+cardio
   +'<section class="card"><h2>Regras do jogo</h2><p class="muted">Descanse 60 a 90 s entre as séries e 2 a 3 min nos exercícios principais. Quando fechar o topo das repetições em todas as séries, suba um pouco a carga. Em dias sem treino, faça caminhada inclinada ou bike por 20 a 30 min.</p></section>'
   +'<section class="card"><h2>Últimos treinos</h2>'+(hist?'<div class="list">'+hist+'</div>':'<div class="empty">Seus treinos registrados aparecem aqui.</div>')+'</section>';
 }
@@ -159,6 +170,7 @@ function vEvolucao(){
   const mChart=mp.length?lineChart(mp,{unit:sel.u,label:sel.n+' ao longo do tempo'}):'<div class="empty">Registre medidas na aba Corpo para ver cada uma aqui.</div>';
   const m0=mondayOf(today()),cs=countedSessions(),weeks=[];
   for(let i=7;i>=0;i--){const a=addDays(m0,-7*i),b=addDays(a,6);weeks.push({l:fdate(a),n:cs.filter(s=>s.date>=a&&s.date<=b).length})}
+  const cw=[];for(let i=7;i>=0;i--){const a=addDays(m0,-7*i),b=addDays(a,6);cw.push({l:fdate(a),n:Object.values(S.cardio).filter(c=>c.date>=a&&c.date<=b).reduce((t,c)=>t+c.min,0)})}
   const logged={};Object.values(S.sessions).forEach(s=>Object.keys(s.ex||{}).forEach(k=>{if(s.ex[k].kg!=null&&EXMAP[k])logged[k]=1}));
   const exl=Object.keys(logged);
   if(!exl.includes(S.ui.exSel))S.ui.exSel=exl[0]||null;
@@ -171,6 +183,7 @@ function vEvolucao(){
   return '<section class="card"><div class="row between"><h2>Peso</h2>'+(w.length>1?'<span class="small">'+(lost>=0?'−':'+')+nf(Math.abs(lost))+' kg desde o início'+(pc!=null?' · '+nf(pc,2)+' kg/sem':'')+'</span>':'')+'</div><div class="chart">'+wChart+'</div></section>'
   +'<section class="card"><h2>Medidas</h2>'+(avail.length?'<div class="row">'+avail.map(m=>'<button class="chip'+(m.k===S.ui.meas?' on':'')+'" data-act="meas" data-v="'+m.k+'" aria-pressed="'+(m.k===S.ui.meas)+'">'+m.n+'</button>').join('')+'</div>':'')+'<div class="chart">'+mChart+'</div></section>'
   +'<section class="card"><h2>Treinos por semana</h2><div class="chart">'+barChart(weeks,4)+'</div><p class="small">Contam treinos com metade das séries feitas ou a versão mínima.</p></section>'
+  +'<section class="card"><h2>Cardio por semana</h2>'+(Object.keys(S.cardio).length?'<div class="chart">'+barChart(cw,null,'Minutos de cardio por semana')+'</div><p class="small">Soma dos minutos de cada semana.</p>':'<div class="empty">Registre cardio na aba Treino para ver os minutos por semana.</div>')+'</section>'
   +'<section class="card"><h2>Progressão de carga</h2>'+lsel+'<div class="chart">'+lc+'</div></section>';
 }
 const VIEWS={hoje:vHoje,treino:vTreino,corpo:vCorpo,fotos:vFotos,evolucao:vEvolucao};
@@ -243,7 +256,7 @@ async function addPhoto(file){
   }catch(e){toast('Não consegui ler essa imagem. Tente outra foto.')}
 }
 function exportData(withPhotos){
-  const data={app:'por-o-shape',version:1,exportedAt:new Date().toISOString(),settings:S.settings,days:S.days,sessions:S.sessions,body:S.body,photos:withPhotos?S.photos:{}};
+  const data={app:'por-o-shape',version:1,exportedAt:new Date().toISOString(),settings:S.settings,days:S.days,sessions:S.sessions,body:S.body,cardio:S.cardio,photos:withPhotos?S.photos:{}};
   return JSON.stringify(data);
 }
 function doExport(withPhotos){
@@ -259,7 +272,7 @@ async function doImport(file){
     if(st.ankle!==undefined&&st.lowImpact===undefined)st.lowImpact=!!st.ankle; // backups da versão antiga
     delete st.ankle;
     S.settings=Object.assign({},DEFAULTS,st,{setup:true});jobs.push(Store.put('settings','main',S.settings))}
-    ['days','sessions','body','photos'].forEach(c=>Object.keys(d[c]||{}).forEach(id=>{S[c][id]=d[c][id];jobs.push(Store.put(c,id,d[c][id]))}));
+    ['days','sessions','body','photos','cardio'].forEach(c=>Object.keys(d[c]||{}).forEach(id=>{S[c][id]=d[c][id];jobs.push(Store.put(c,id,d[c][id]))}));
     await Promise.all(jobs);render(true);toast('Backup restaurado');
   }catch(e){toast('Esse arquivo não é um backup do app.')}
 }
@@ -297,9 +310,16 @@ document.addEventListener('click',function(ev){
     case 'del':{
       const col=el.dataset.col,id=el.dataset.id,key=col+id;
       if(u.confirm!==key){u.confirm=key;render(true);break}
-      delete S[col==='body'?'body':'photos'][id];Store.del(col,id);u.confirm=null;
+      delete S[col][id];Store.del(col,id);u.confirm=null;
       if(col==='photos'){u.lightbox=null;}
       render(true);toast('Apagado');break}
+    case 'ctype':u.cType=el.dataset.v;render(true);break;
+    case 'cmin+':case 'cmin-':u.cMin=clamp((num(u.cMin)||0)+(a==='cmin+'?5:-5),0,600);render(true);break;
+    case 'save-cardio':{
+      const min=num($('#c-min').value);if(min==null||min<1||min>600){toast('Informe o tempo em minutos.');break}
+      const other=$('#c-other'),tipo=u.cType==='Outro'?((other&&other.value.trim())||'Outro'):u.cType;
+      const id='c'+Date.now(),rec={date:u.date,tipo:tipo,min:Math.round(min),ts:Date.now()};
+      S.cardio[id]=rec;save('cardio',id,rec);toast('Cardio salvo');render(true);break}
     case 'addpose':u.addPose=el.dataset.v;render(true);break;
     case 'pose':u.pose=el.dataset.v;u.cmpSet=false;render(true);break;
     case 'pick':$('#pfile').click();break;
@@ -322,6 +342,8 @@ document.addEventListener('change',function(ev){
   switch(el.dataset.field){
     case 'steps':{const v=num(el.value);patchDay('steps',v==null?null:Math.max(0,Math.round(v)));render(true);break}
     case 'kg':{const v=num(el.value);setKg(el.dataset.ex,v);break}
+    case 'cmin':{const v=num(el.value);u.cMin=v==null?20:Math.round(v);break}
+    case 'cother':u.cOther=el.value;break;
     case 'tdate':if(el.value){u.date=el.value;render(true)}break;
     case 'bdate':if(el.value){u.bodyDate=el.value;render(true)}break;
     case 'pdate':if(el.value)u.pDate=el.value;break;

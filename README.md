@@ -5,7 +5,8 @@ App web para acompanhar **treinos, peso, medidas e fotos de progresso**. Funcion
 ## O que tem
 
 - **Hoje:** resumo do dia, próximo treino, check-in de hábitos (proteína, água, sono, refeições, movimento, passos) e progresso até a meta.
-- **Treino:** divisão de 4 dias em máquinas (A pernas e glúteos, B costas e ombros, C pernas e core, D superior e condicionamento), com séries marcáveis, carga por exercício, sugestão de progressão e "versão mínima" para dias difíceis. Há um modo de baixo impacto que troca a passada por leg press unilateral e a corrida por bike.
+- **Treino:** divisão de 4 dias em máquinas (A pernas e glúteos, B costas e ombros, C pernas e core, D superior e condicionamento), com séries marcáveis, carga por exercício, sugestão de progressão e "versão mínima" para dias difíceis. Treinos antigos ou incompletos podem ser apagados. Há um modo de baixo impacto que troca a passada por leg press unilateral e a corrida por bike.
+- **Cardio:** registre o tipo (bicicleta, esteira, caminhada, elíptico, corrida, escada ou outro) e o tempo em minutos, com histórico e gráfico de minutos por semana.
 - **Corpo:** peso, % de gordura e medidas (cintura, abdômen, quadril, braço, coxa, tórax), com a mudança desde o início.
 - **Fotos:** fotos de frente, lado e costas, galeria e comparador de antes e depois.
 - **Evolução:** gráficos de peso (com a linha da meta), medidas, treinos por semana e carga por exercício.

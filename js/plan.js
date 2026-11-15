@@ -54,4 +54,5 @@ export const TIPS=[
  'A balança é só uma medida. Cintura, fotos e cargas também contam a história.',
  'Calorias e cardápio ficam com um nutricionista, que conhece seus exames e sua rotina.'
 ];
+export const CARDIO=['Bicicleta','Esteira','Caminhada','Elíptico','Corrida','Escada','Outro'];
 export const DEFAULTS={height:null,startWeight:null,goalWeight:null,lowImpact:false,setup:false};

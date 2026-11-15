@@ -21,14 +21,14 @@ export function lineChart(pts,o){
   else s+='<text class="axis" x="'+L+'" y="'+(H-8)+'">'+dl(t0)+'</text><text class="axis" x="'+(W-R)+'" y="'+(H-8)+'" text-anchor="end">'+dl(t1)+'</text>';
   return s+'</svg>';
 }
-export function barChart(items,target){
-  const W=340,H=170,L=14,R=12,T=18,B=24;const mx=Math.max(target,Math.max.apply(null,items.map(i=>i.n)),1);
+export function barChart(items,target,label){
+  const W=340,H=170,L=14,R=12,T=18,B=24;const mx=Math.max(target||0,Math.max.apply(null,items.map(i=>i.n)),1);
   const Y=v=>T+(mx-v)/mx*(H-T-B);const bw=(W-L-R)/items.length;
-  let s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Treinos por semana">';
+  let s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+esc(label||'Treinos por semana')+'">';
   s+='<line class="grid-l" x1="'+L+'" x2="'+(W-R)+'" y1="'+(H-B)+'" y2="'+(H-B)+'"/>';
-  s+='<line class="goal-l" x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(target)+'" y2="'+Y(target)+'"/><text class="goal-t" x="'+(W-R)+'" y="'+(Y(target)-4)+'" text-anchor="end">meta '+target+'</text>';
+  if(target)s+='<line class="goal-l" x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(target)+'" y2="'+Y(target)+'"/><text class="goal-t" x="'+(W-R)+'" y="'+(Y(target)-4)+'" text-anchor="end">meta '+target+'</text>';
   items.forEach((it,i)=>{const x=L+i*bw+bw*.2,w=bw*.6,y=Y(it.n);
-    s+='<rect class="bar-r'+(it.n>=target?' hit':'')+'" x="'+x+'" y="'+y+'" width="'+w+'" height="'+Math.max(0,H-B-y)+'" rx="4"/>';
+    s+='<rect class="bar-r'+(target&&it.n>=target?' hit':'')+'" x="'+x+'" y="'+y+'" width="'+w+'" height="'+Math.max(0,H-B-y)+'" rx="4"/>';
     if(it.n>0)s+='<text class="val-t" x="'+(x+w/2)+'" y="'+(y-4)+'" text-anchor="middle">'+it.n+'</text>';
     s+='<text class="axis" x="'+(x+w/2)+'" y="'+(H-8)+'" text-anchor="middle">'+it.l+'</text>'});
   return s+'</svg>';
