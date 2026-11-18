@@ -71,7 +71,10 @@ function vHoje(){
 
 function vTreino(){
   const u=S.ui,day=DAYS.find(d=>d.k===u.day),id=u.date+'_'+u.day,s=S.sessions[id]||{date:u.date,day:u.day,ex:{},min:false};
-  const exs=day.ex.map(resolveEx),dn=sessDone(Object.assign({},s,{ex:s.ex}));
+  let exs=day.ex.map(resolveEx);
+  const fin=e=>((s.ex[e.id]&&s.ex[e.id].done)||[]).filter(Boolean).length>=e.s;
+  if(S.settings.doneLast!==false)exs=exs.filter(e=>!fin(e)).concat(exs.filter(fin)); // feitos vão para o fim da lista
+  const dn=sessDone(Object.assign({},s,{ex:s.ex}));
   const pct=dn.total?dn.done/dn.total:0;
   const pills=DAYS.map(d=>'<button class="daypill" style="--dc:var('+d.color+')" data-act="day" data-k="'+d.k+'" aria-pressed="'+(d.k===u.day)+'"><b>'+d.k+'</b><span>'+esc(d.name)+'</span></button>').join('');
   const cards=exs.map(e=>{
@@ -195,6 +198,7 @@ function vSettings(){
   +'<div class="grid3"><label class="f">Altura (cm)<input id="s-height" inputmode="decimal" data-set="height" value="'+nf(st.height)+'"></label>'
   +'<label class="f">Peso inicial (kg)<input id="s-start" inputmode="decimal" data-set="startWeight" value="'+nf(st.startWeight)+'"></label>'
   +'<label class="f">Meta (kg)<input id="s-goal" inputmode="decimal" data-set="goalWeight" value="'+nf(st.goalWeight)+'"></label></div>'
+  +'<button class="habit'+(st.doneLast!==false?' on':'')+'" data-act="donelast" aria-pressed="'+(st.doneLast!==false)+'"><span class="ck">'+icon('check')+'</span><span>Mandar exercícios feitos para o final da lista</span></button>'
   +'<button class="habit'+(st.lowImpact?' on':'')+'" data-act="lowimpact" aria-pressed="'+!!st.lowImpact+'"><span class="ck">'+icon('check')+'</span><span>Modo baixo impacto: troca a passada por leg press unilateral e a corrida por bike</span></button>'
   +'<h3>Backup</h3><p class="muted">Baixe uma cópia dos seus registros ou restaure de um arquivo.</p>'
   +'<div class="row"><button class="btn" data-act="export">Exportar tudo</button><button class="btn ghost" data-act="export-lite">Sem fotos</button><button class="btn ghost" data-act="import">Importar</button></div>'
@@ -325,6 +329,7 @@ document.addEventListener('click',function(ev){
     case 'pick':$('#pfile').click();break;
     case 'lightbox':u.lightbox=el.dataset.id;render(true);break;
     case 'meas':u.meas=el.dataset.v;render(true);break;
+    case 'donelast':S.settings.doneLast=S.settings.doneLast===false;save('settings','main',S.settings);render(true);break;
     case 'lowimpact':S.settings.lowImpact=!S.settings.lowImpact;save('settings','main',S.settings);render(true);break;
     case 'finish-setup':finishSetup();break;
     case 'export':doExport(true);break;

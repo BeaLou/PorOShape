@@ -55,4 +55,4 @@ export const TIPS=[
  'Calorias e cardápio ficam com um nutricionista, que conhece seus exames e sua rotina.'
 ];
 export const CARDIO=['Bicicleta','Esteira','Caminhada','Elíptico','Corrida','Escada','Outro'];
-export const DEFAULTS={height:null,startWeight:null,goalWeight:null,lowImpact:false,setup:false};
+export const DEFAULTS={height:null,startWeight:null,goalWeight:null,lowImpact:false,doneLast:true,setup:false};
